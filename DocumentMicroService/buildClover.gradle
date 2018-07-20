@@ -1,0 +1,162 @@
+
+buildscript {
+       ext {
+             springBootVersion = '1.5.7.RELEASE'
+       }
+       repositories {
+             mavenCentral()
+       }
+       dependencies {
+             classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+             classpath('se.transmode.gradle:gradle-docker:1.2')
+             classpath 'com.bmuschko:gradle-clover-plugin:2.2.0'
+       }
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse-wtp'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'war'
+apply plugin: 'application'
+apply plugin: 'docker'
+apply plugin: 'com.bmuschko.clover'
+
+group = 'com.daimler'
+version = '1.0'
+sourceCompatibility = 1.8
+
+repositories {
+       mavenCentral()
+}
+
+
+dependencies {
+       compile('org.springframework.boot:spring-boot-starter-data-mongodb')
+       compile('org.springframework.boot:spring-boot-starter-web')
+       compile('org.springframework.boot:spring-boot-starter-logging')
+       //compile('org.springframework.boot:spring-boot-starter-log4j2')
+       providedRuntime('org.springframework.boot:spring-boot-starter-tomcat')
+       testCompile('org.springframework.boot:spring-boot-starter-test')
+       compile group: 'javax.enterprise', name: 'cdi-api', version: '2.0' 
+       compile group: 'org.jboss.weld', name: 'weld-core', version: '2.4.4.Final'
+       compile group: 'io.springfox', name: 'springfox-swagger2', version: '2.7.0'
+    compile group: 'io.springfox', name: 'springfox-swagger-ui', version: '2.7.0'
+    // https://mvnrepository.com/artifact/org.mockito/mockito-core
+     testCompile group: 'org.mockito', name: 'mockito-core', version: '1.8.5'
+    // https://mvnrepository.com/artifact/org.powermock/powermock-mockito-release-full
+    testCompile group: 'org.powermock', name: 'powermock-mockito-release-full', version: '1.6.4'
+    // https://mvnrepository.com/artifact/org.powermock/powermock-api-mockito
+     testCompile group: 'org.powermock', name: 'powermock-api-mockito', version: '1.4.9'
+     
+     compile group: 'io.jsonwebtoken', name: 'jjwt', version: '0.7.0'
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-actuator'
+     // https://mvnrepository.com/artifact/com.atlassian.clover/clover
+    // compile group: 'com.atlassian.clover', name: 'clover', version: '4.0.0'
+     // cloverCompile 'org.openclover:clover:4.2.0'
+    
+        clover 'org.openclover:clover:4.2.0'
+}
+
+clover {
+    excludes = ['**/*Repository.java']
+
+    // This is the default testIncludes configuration
+    testIncludes = ['**/*Test.java', '**/*Spec.groovy']
+    testExcludes = ['**/Mock*.java']
+
+    targetPercentage = '80%'
+
+    // Closure based syntax for additionalSourceSets and
+    // additionalTestSourceSets is also supported. Both
+    // srcDirs and classesDir properties are required.
+    // The syntax allows the following to occur as many times
+    // as necessary to define each additional sourceSet.
+    // From version 3.0.0 and later the configuration is
+    // requiring the Gradle 4.0 outputDir for each language
+    // in the sourceSet. If you have Java and Groovy sourceSets
+    // you may need to specify each language in the sourceSet
+    // separately.
+   
+   
+    
+
+    compiler {
+        encoding = 'UTF-8'
+
+        // if the javac executable used by ant should be the same as the one used elsewhere.
+        executable = file('/usr/local/java/jdk1.8.0_05')
+        // used to add debug information for Spring applications
+        debug = true
+        additionalArgs = '-parameters'
+    }
+
+    contexts {
+        statement {
+            name = 'log'
+            regexp = '^.*LOG\\..*'
+        }
+
+        method {
+            name = 'main'
+            regexp = 'public static void main\\(String args\\[\\]\\).*'
+        }
+        method {
+            name = 'getters'
+            regexp = 'public [^\\s]+ get[A-Z][^\\s]+\\(\\)'
+            maxStatements = 1
+        }
+        method {
+            name = 'setters'
+            regexp = 'public void set[A-Z][^\\s]+\\(.+\\)'
+            maxStatements = 1
+        }
+    }
+
+    report {
+        html = true
+        pdf = true
+        filter = 'log,main,getters,setters'
+
+        // Support capturing test results from JUnix XML report
+        testResultsDir = project.tasks.getByName('test').reports.junitXml.destination
+        testResultsInclude = 'TEST-*.xml'
+
+        // Clover report nested columns support
+        columns {
+            coveredMethods format: 'longbar', min: '75'
+            coveredStatements format: '%'
+            coveredBranches format: 'raw'
+            totalPercentageCovered format: '%', scope: 'package'
+        }
+
+        // Clover history generation support
+        // See Clover documentation for details of the values supported
+        historical {
+            enabled = true
+            historyIncludes = 'clover-*.xml.gz'
+            packageFilter = null
+            from = null
+            to = null
+
+            added {
+                range = 10
+                interval = '3 weeks'
+            }
+            mover {
+                threshold = 1
+                range = 10
+                interval = '3 weeks'
+            }
+            mover {
+                threshold = 1
+                range = 10
+                interval = '3 months'
+            }
+            mover {
+                threshold = 1
+                range = 10
+                interval = '1 year'
+            }
+        }
+    }
+}
