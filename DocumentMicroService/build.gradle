@@ -1,4 +1,4 @@
-
+i
 buildscript {
        ext {
              springBootVersion = '1.5.7.RELEASE'
@@ -14,7 +14,7 @@ buildscript {
        }
 }
 
-apply plugin: 'java'
+apply plugin: 'java-Test'
 apply plugin: 'eclipse-wtp'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'war'
